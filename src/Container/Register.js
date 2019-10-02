@@ -355,7 +355,7 @@ class Register extends Component {
                         {form}
                     </div>
                     <div className={classes.c} >
-                        <img src={require('./Tuitor.jpg')} width="500" height="200"></img>
+                     
                     </div>
                 </div>
             )

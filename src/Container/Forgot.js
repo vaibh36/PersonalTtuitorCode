@@ -1,6 +1,8 @@
 import React,{Component} from 'react';
 import axios from 'axios';
-import Spinner from '../Spinner/Spinner'
+import Spinner from '../Spinner/Spinner';
+import { Link, Switch, Route, withRouter } from 'react-router-dom';
+import TextComponent from '../Components/TextComponent'
 
 class Forgot extends Component {
 
@@ -67,7 +69,9 @@ class Forgot extends Component {
             <div>
                  {!this.state.val?<input style={Object.assign({margin:10})} type="text" onChange={(event) => this.changeHandler(event)}></input>:null}
                  {!this.state.val?<button style={Object.assign({margin:10})} onClick={this.forgotPassword}>Submit</button>:null}
-                 {this.state.message}
+                
+                <TextComponent>{this.state.message}</TextComponent>
+                 {this.state.val?<Link to='/login'>Return to Sign In</Link>:null}
             </div>
         )
          

@@ -5,6 +5,7 @@ import Input from '../input';
 import AuthContext from '../auth-context';
 import Header from '../Container/Header/Header';
 import { InputGroup, FormControl, Button } from 'react-bootstrap';
+import TextComponent from '../Components/TextComponent'
 
 class personal extends Component {
 
@@ -14,7 +15,8 @@ class personal extends Component {
         logged: false,
         newPlaces: '',
         formIsValid: false,
-        FavouriteCount: null
+        FavouriteCount: null,
+        serverMessage:''
     }
 
     constructor(props) {
@@ -41,10 +43,10 @@ class personal extends Component {
                     FavouriteCount: res.data.FCount
                 })
             }).catch((err) => {
-                console.log('error inside')
-                console.log(err);
+                console.log('error inside:-',err.response.data.message)
                 this.setState({
-                    logged: false
+                    logged: false,
+                    serverMessage:err.response.data.message
                 })
             })
     }
@@ -120,7 +122,7 @@ class personal extends Component {
             })
             this.refs.newplaces.value = ''
         }).catch((err) => {
-            console.log(err)
+            console.log('Seems some issue while added places with the error:-',err)
         })
 
     }
@@ -150,6 +152,9 @@ class personal extends Component {
             this.setState({
                 Places: res.data.Places
             })
+        })
+        .catch((err) => {
+            console.log('Seems some error with the value of error as :-',err)
         })
     }
 
@@ -212,7 +217,7 @@ class personal extends Component {
             )
         }
         else {
-            personalData = null
+            personalData = <TextComponent>{this.state.serverMessage}</TextComponent>
         }
 
         return (

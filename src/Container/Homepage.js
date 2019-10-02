@@ -18,8 +18,10 @@ import NewPassword from './NewPassword';
 import RegisterStudent from '../Container/Students/Register';
 import StudentLogin from '../Container/Students/StudentLogin';
 import TuitorSearch from '../Container/Student/TuitorSearch';
-import StudentLogout from '../Container/Students/StudentLogout'
-
+import StudentLogout from '../Container/Students/StudentLogout';
+import LoadSpinner from '../Components/LoadSpinner';
+import Login1 from './Login1';
+import Radium, { StyleRoot } from 'radium';
 
 class Homepage extends Component {
 
@@ -61,6 +63,7 @@ class Homepage extends Component {
                 value: ''
             }
         },
+        studentLoading: false
     }
 
 
@@ -93,15 +96,17 @@ class Homepage extends Component {
         }
     }
 
-    login = (event) => {
-        event.preventDefault();
+    login = (a, b) => {
+
         this.setState({
             loading: true
         })
-        const formData = {};
-        for (let forElementIdentifier in this.state.loginForm) {
-            formData[forElementIdentifier] = this.state.loginForm[forElementIdentifier].value
-        }
+        console.log('Inside ogin of homepage:-', a, b);
+
+        const formData = { Email: a, Password: b };
+        /* for (let forElementIdentifier in this.state.loginForm) {
+             formData[forElementIdentifier] = this.state.loginForm[forElementIdentifier].value
+         } */
         axios.post('/api/login', formData)
             .then((response) => {
                 localStorage.setItem('token', response.data.token)
@@ -115,9 +120,10 @@ class Homepage extends Component {
                 this.setState({
                     errorMessage: err.response.data.message,
                     loading: false
+                }, () => {
+                    console.log('Tuitor login state in catch is:-', this.state.errorMessage)
                 })
             })
-
 
     }
 
@@ -182,25 +188,6 @@ class Homepage extends Component {
         })
     }
 
-    onChangeHandler = (event, identifier) => {
-        const updatedForm = {
-            ...this.state.loginForm
-        }
-        const updatedElement = {
-            ...updatedForm[identifier]
-        }
-        updatedElement.value = event.target.value;
-
-
-
-
-        updatedForm[identifier].value = updatedElement.value;
-        this.setState({
-            loginForm: updatedForm,
-
-        })
-    }
-
     onChangeHandlerStudentHandler = (event, identifier) => {
 
         const updatedForm = {
@@ -218,19 +205,40 @@ class Homepage extends Component {
     }
 
     logout = () => {
+
+        console.log('Insisde the tuitor logout')
+        const updatedLoginForm = {
+            ...this.state.loginForm
+        }
+
+
+        updatedLoginForm['Password'].value = ''
+        updatedLoginForm['Email'].value = ''
+
         this.setState({
             token: '',
-
+            loginForm: updatedLoginForm
         })
 
     }
 
     studentLogOut = () => {
 
+        const updatedStudentForm = {
+            ...this.state.StudentloginForm
+        }
+
+        updatedStudentForm['Email'].value = '';
+        updatedStudentForm['Password'].value = '';
+
         localStorage.removeItem('tokenstudent');
         this.setState(
-            { tokenstudent: '' }
+            {
+                tokenstudent: '',
+                StudentloginForm: updatedStudentForm
+            }
             , () => {
+
                 this.props.history.push('/')
             })
     }
@@ -238,26 +246,56 @@ class Homepage extends Component {
 
     loginStudent = () => {
 
+        this.setState({
+            studentLoading: true
+        })
+
         const formData = {};
         for (let forElementIdentifier in this.state.StudentloginForm) {
             formData[forElementIdentifier] = this.state.StudentloginForm[forElementIdentifier].value
         }
+
+
         axios.post('/api/studentlogin', formData)
             .then((response) => {
                 localStorage.setItem('tokenstudent', response.data.token)
                 this.props.history.push('/students');
                 this.setState({
-                    tokenstudent: response.data.token
-                })
+                    tokenstudent: response.data.token,
+                    studentLoading: false,
+                }
+                )
 
             }).catch((err) => {
                 console.log('Error is:-', err.response.data.message);
-                this.setState({
+                /*           this.setState({
+                               errorMessage: err.response.data.message,
+                               studentLoading:false
+           
+                           }) */
+                this.setState((state) => ({
                     errorMessage: err.response.data.message,
+                    studentLoading: false
+                }))
 
-                })
             })
+
+        const updatedStudentForm = {
+            ...this.state.StudentloginForm
+        }
+
+        updatedStudentForm['Email'].value = ''
+        updatedStudentForm['Password'].value = ''
+
+        this.setState({
+            StudentloginForm: updatedStudentForm,
+            errorMessage: ''
+        })
+
+
     }
+
+
 
     deleteStudentToken = () => {
         localStorage.removeItem('tokenstudent');
@@ -273,7 +311,7 @@ class Homepage extends Component {
 
     render() {
 
-        console.log('Token deleted')
+        console.log('Token deleted and the message is:-', this.state)
         let links;
         if (this.state.token) {
             links = (
@@ -285,65 +323,51 @@ class Homepage extends Component {
         else {
             links = (
                 <div>
-                    <Link style={{ margin: 5 }} to='/login'>Login</Link>
-                    <Link to='/register'>Register</Link>
-                    
-                   
-                      
-                    <div class="dropdown" style={{marginLeft:1300}}>
-                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Student corner
+                    <Link style={{ marginLeft: '10px' }} to='/login'>Login</Link>
+                    <Link style={{ marginLeft: '10px' }} to='/register'>Register</Link>
+                    <div class="dropdown" style={{ marginLeft: 1300 }}>
+                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Student Corner
     <span class="caret"></span></button>
-                        <ul class="dropdown-menu">
-                            <li><Link to='/students/register'>Register</Link></li>
+                        <ul class="dropdown-menu" >
+                            <li><Link to='/students/register' >Register</Link></li>
                             <li><Link to='/students/studentlogin'>Login</Link></li>
                         </ul>
                     </div>
                 </div>
-                   
             )
         }
 
 
         let loader;
 
-        if (this.state.loading) {
+        if (this.state.loading || this.state.studentLoading) {
             loader = <Spinner />
         }
 
-
-
         return (
             <div>
-                <img className={classes.a} src={require('./Tuitionicon.jpg')} width="30" height="30" />
-                <h1 className={classes.a}>Create an account to study or to teach</h1>
-
+                <div style={{lineHeight:'20%'}}>
+                <Link to='/'><h3  style={{marginLeft:'10px' ,marginBottom:'0px',  paddingBottom: '0px'}}>Find my tuitor</h3></Link>
+                <span style={{fontSize:'10px', marginLeft:'80px', fontFamily:'Times New Roman", Times, serif;'}}>Discover.Learn.Grow</span>
+                </div>
+                <br />
                 {links}
                 <div>
-                    <div >
-                        <img className={classes.mainStreamImage} src={require('./Housetuition.jpg')} width="400" height="300" />
-                        <div className={classes.mainStreamText}>
-                            <h1>Where Work Happens</h1>
-                        </div>
-                    </div>
                 </div>
-
                 {loader}
-
                 <Switch>
                     {this.state.tokenstudent ? null : <Route path='/register' exact component={Register}></Route>}
-                    {this.state.tokenstudent ? null : <Route path='/login' render={(props) => (<Login {...props}
+                    {this.state.tokenstudent ? null : <Route path='/login' render={(props) => (<Login1 {...props}
                         message={this.state.errorMessage}
-                        emailminval={this.state.loginForm.Email.minLength}
-                        passwordminval={this.state.loginForm.Password.minLength}
-                        email={this.state.loginForm.Email.value} password={this.state.loginForm.Password.value} emailVal={this.onChangeHandler} passwordVal={this.onChangeHandler} clickLogin={this.login}
-                    ></Login>)} />}
+                        clickLogin={this.login}
+                    ></Login1>)} />}
 
                     <Route path='/personal' component={Personal}></Route>
                     <Route path='/findtuitor' component={Findtuitor}></Route>
                     {this.state.tokenstudent ? <Route path='/students' exact component={() => <Student clickme={this.studentLogOut} />}></Route> : null}
-                   
-                   {this.state.tokenstudent?null: <Route exact path='/students/register' component={RegisterStudent}></Route>}
-                   {this.state.tokenstudent?null: <Route exact path='/students/studentlogin' render={(props) => (<StudentLogin {...props}
+
+                    {this.state.tokenstudent ? null : <Route exact path='/students/register' component={RegisterStudent}></Route>}
+                    {this.state.tokenstudent ? null : <Route exact path='/students/studentlogin' render={(props) => (<StudentLogin
                         message={this.state.errorMessage}
                         email={this.state.StudentloginForm.Email.value}
                         password={this.state.StudentloginForm.Password.value}
@@ -363,4 +387,4 @@ class Homepage extends Component {
     }
 }
 
-export default withRouter(Homepage);
+export default Radium(withRouter(Homepage));

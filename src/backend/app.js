@@ -1,3 +1,4 @@
+
 const express = require('express');
 const bodyParser = require('body-parser')
 const app = express();
@@ -13,8 +14,7 @@ var MongooseCache = require('mongoose-redis');
 var cache = MongooseCache(mongoose, "redis://127.0.0.1:6379");
 var async = require("async");
 var nodemailer = require('nodemailer');
-
-
+var TinyURL = require('tinyurl');
 
 
 var client = redis.createClient();
@@ -62,7 +62,19 @@ const verifiyToken = (req, res, next) => {
     }
 
     console.log('hello1')
-    let payload = jwt.verify(token, 'secret_key');
+    let payload;
+
+    try {
+        payload = jwt.verify(token, 'secret_key');
+
+    } catch (error) {
+        console.log('Seems token has expired with error:-', error);
+        res.status(403).json({
+            err: error,
+            message: 'Token has expired , please login again'
+        })
+    }
+
     console.log('hello')
     if (!payload) {
         console.log('Someissue')
@@ -77,6 +89,9 @@ const verifiyToken = (req, res, next) => {
     next()
 
 }
+
+
+
 
 app.post('/api/signup', (req, res, next) => {
 
@@ -146,11 +161,10 @@ app.post('/api/login', (req, res, next) => {
 
             }
 
-
             const token = jwt.sign(
                 { Email: fetchedtuitor.Email, userId: fetchedtuitor._id },
                 'secret_key',
-                { expiresIn: '1d' }
+                { expiresIn: '24h' }
             )
 
             res.status(200).json({
@@ -398,7 +412,7 @@ app.get('/forgot/:email', (req, res, next) => {
                 },
                 function (token, user, done) {
                     console.log('Inside third function finally');
-                    console.log('Recipient email is:-', req.params.email)
+                    console.log('Recipient email is:-', req.params.email, req.headers['x-forwarded-host'])
                     const recipientemail = req.params.email
                     var transporter = nodemailer.createTransport({
                         service: 'Gmail',
@@ -407,23 +421,34 @@ app.get('/forgot/:email', (req, res, next) => {
                             pass: 'krishnagera1'
                         }
                     });
-                    var mailOptions = {
-                        from: 'vaibh18@gmail.com',
-                        to: recipientemail,
-                        subject: 'Sending Email using Node.js',
-                        text: 'That was easy!\n\n' +
-                            'http://' + 'localhost' + ':' + 3000 + '/reset/' + token + '\n\n'
-                    };
-                    transporter.sendMail(mailOptions, function (error, info) {
-                        console.log('Trying to send email');
-                        if (error) {
-                            console.log(error);
-                        } else {
-                            console.log('Trying to send email in else')
-                            console.log('Email sent: ' + info.response);
-                            done(null, 'Email has finally been sent')
-                        }
+                    text1 = 'http://' + req.headers['x-forwarded-host'] + '/reset/' + token;
+                    let text2;
+                    TinyURL.shorten(text1).then(function (res) {
+                        console.log(res);
+                        text2= res;
+                        var mailOptions = {
+                            from: 'vaibh18@gmail.com',
+                            to: recipientemail,
+                            subject: 'Sending Email using Node.js',
+                            text: 'That was easy!\n\n' + text2
+                        };
+                        transporter.sendMail(mailOptions, function (error, info) {
+                            console.log('Trying to send email');
+                            if (error) {
+                                console.log(error);
+                            } else {
+                                console.log('Trying to send email in else')
+                                console.log('Email sent: ' + info.response);
+                                done(null, 'Email has finally been sent')
+                            }
+                        });
+
+                    }, function (err) {
+                        console.log(err)
                     });
+                    console.log('Text2 is:-', text2)
+                    
+                   
                 }
             ], (err, result) => {
                 if (err) {
@@ -571,7 +596,7 @@ app.post('/favouriteme', verifiyToken, (req, res) => {
             console.log('Data sending', data);
             console.log('Tuitor part of this student is:-', data.tuitors)
 
-           
+
             // The IF code is to unfavourite the tuitor
             if (data.tuitors.includes(req.body.tuitoremail)) {
 
@@ -611,15 +636,15 @@ app.post('/favouriteme', verifiyToken, (req, res) => {
                             console.log('Final data is', data);
                             res.status(201).json({
                                 docs: data,
-                                message:'The Tuitor has been unfavourited'
+                                message: 'The Tuitor has been unfavourited'
                             })
-                          
+
                         }).catch((err) => {
                             console.log('Error is:-', err)
                         })
 
                     })
-                        
+
 
                 })
 
@@ -627,7 +652,7 @@ app.post('/favouriteme', verifiyToken, (req, res) => {
             // The ELSE code is to Favourite the Tuitor
             else {
                 console.log('We need to add this tuitor to the student array and vica versa');
-           
+
                 var tuitoremail = req.body.tuitoremail;
                 console.log('Basic fields are:-', req.Email, tuitoremail)
                 studentinfo.findOneAndUpdate({ Email: req.Email }, { $addToSet: { tuitors: tuitoremail } }, (err, doc) => {
@@ -665,14 +690,12 @@ app.post('/favouriteme', verifiyToken, (req, res) => {
                             console.log('Final data is', data);
                             res.status(201).json({
                                 docs: data,
-                                message:'The Tuitor has been favourited'
+                                message: 'The Tuitor has been favourited'
                             })
 
                         }).catch((err) => {
                             console.log('Error is:-', err)
                         })
-
-
 
                     })
                         .then((result) => {
@@ -682,23 +705,9 @@ app.post('/favouriteme', verifiyToken, (req, res) => {
                 }).catch((err) => {
                     console.log('Error is:-', err)
                 })
-
-
-
-
-
-
-
             }
-
         }
-
-
     })
-
-
-
-
 })
 
 

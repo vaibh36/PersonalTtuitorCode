@@ -6,9 +6,14 @@ import Personal from '../Personal/Personal';
 import { Link, Switch, Route, withRouter } from 'react-router-dom';
 import { Button } from 'react-bootstrap';
 import { InputGroup, FormControl } from 'react-bootstrap';
-import Header from '../Container/Header/Header'
+import Header from '../Container/Header/Header';
+import TextComponent from '../Components/TextComponent'
 
 class Login extends Component {
+
+    constructor(props){
+        super(props)
+    }
 
     state = {
         isValid: false,
@@ -81,6 +86,7 @@ class Login extends Component {
     render() {
       
         return (
+           
             <div>
                 <div class="col-sm-3">
                     <InputGroup style={{ margin: 10 }}>
@@ -100,8 +106,10 @@ class Login extends Component {
                 </div>
                 <Link to='/forgotpassword'><small>Forgot Password</small></Link>
                 <Button style={{ margin: 30 }} onClick={this.props.clickLogin} variant="primary">Login</Button>
-                {this.state.errorMessage}
+                
+                <TextComponent>{this.props.message}</TextComponent>
             </div>
+        
         )
     }
 }
