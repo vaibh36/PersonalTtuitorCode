@@ -1,4 +1,5 @@
 import React from 'react';
+import classes from './TextComponent.css'
 
 const textcomponent = (props)=>{
 
@@ -7,7 +8,7 @@ const textcomponent = (props)=>{
     } = props
 
     return(
-        <span>{children}</span>
+        <span className={classes.boldclass}>{children}</span>
     )
 
 };

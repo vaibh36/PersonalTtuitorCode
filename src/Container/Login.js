@@ -32,8 +32,6 @@ class Login extends Component {
         console.log('Inside the component did mount of login')
         this.refs.email.value = ''
         this.refs.password.value = ''
-
-
     }
 
     /*   static getDerivedStateFromProps(nextProps, prevState) {
@@ -64,29 +62,21 @@ class Login extends Component {
     }  */
 
     refreshData = () => {
-       
         this.setState({
             errorMessage: this.props.message
         })
     }
 
     componentDidUpdate(prevProps) {
-        
-     
         if (prevProps.message !== this.props.message && this.state.errorMessage === '') {
             this.refreshData();
-          
         }
         else {
-          
         }
     }
 
-
     render() {
-      
-        return (
-           
+        return ( 
             <div>
                 <div class="col-sm-3">
                     <InputGroup style={{ margin: 10 }}>
@@ -106,10 +96,8 @@ class Login extends Component {
                 </div>
                 <Link to='/forgotpassword'><small>Forgot Password</small></Link>
                 <Button style={{ margin: 30 }} onClick={this.props.clickLogin} variant="primary">Login</Button>
-                
                 <TextComponent>{this.props.message}</TextComponent>
             </div>
-        
         )
     }
 }

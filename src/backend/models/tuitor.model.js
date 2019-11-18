@@ -16,7 +16,7 @@ var tuitorSchema = new Schema({
         State: String,
         City: String,
         Places: [{ type: String }],
-        Students: [{ type: Schema.Types.ObjectId, ref: 'students' }],
+        Students: [{ type: String}],
         resetPasswordToken:String,
         resetPasswordExpires: Date
 

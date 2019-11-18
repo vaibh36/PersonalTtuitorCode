@@ -8,15 +8,10 @@ import { withRouter } from 'react-router';
 import Tuitors from '../Student/Tuitors';
 import RegisterStudent from '../../Container/Students/Register';
 import Logout from '../../Container/Logout';
-import classes from './Student.css';
+import classes from  './Student.css';
 import ItemDisplay from './ItemDisplay';
-import uniqueFinder from '../../Header1/GenericFunc';
-import stringMatch from '../../Header1/Stringmatchmaking';
-
 
 class Student extends Component {
-
-   
 
     state = {
         result: [],
@@ -39,13 +34,11 @@ class Student extends Component {
         tokenstudent: '',
         loggedOut: false,
         Subjects: [],
-        text: '',
-        StateArray: [],
-        statetext:''
+        text:''
 
     }
     componentDidMount() {
-
+      
     }
 
     inputChangeHandler = (event, identifier) => {
@@ -57,9 +50,9 @@ class Student extends Component {
             ...updatedForm[identifier]
         };
 
-        if (event.target.value.length === 0) {
+        if(event.target.value.length=== 0){
             this.setState({
-                Subjects: []
+                Subjects:[]
             })
         }
 
@@ -67,23 +60,19 @@ class Student extends Component {
         updatedElement.value = event.target.value;
         updatedForm[identifier].value = updatedElement.value;
 
-        if (identifier === 'Subject') {
-            //    console.log('Here to update Subject Field')
+        if(identifier==='Subject'){
+        //    console.log('Here to update Subject Field')
             this.setState({
                 searchForm: updatedForm,
                 text: updatedElement.value,
             })
         }
-
-        if (identifier === 'State') {
-            //    console.log('Here to update Subject Field')
+        else{
+        //    console.log('Here to update ay other field')
             this.setState({
                 searchForm: updatedForm,
-                statetext: updatedElement.value,
             })
         }
-
-        
 
         let token = this.props.tokenstudent
         const config = {
@@ -99,10 +88,10 @@ class Student extends Component {
                     let arr2 = []
                     arr = res.data.message;
                     arr.forEach((val) => {
-                        //    console.log(val.subject);
+                    //    console.log(val.subject);
                         arr2.push(val.subject)
                     });
-                    //    console.log('Final array is:-', arr2);
+                //    console.log('Final array is:-', arr2);
                     this.setState({
                         Subjects: arr2
                     })
@@ -110,9 +99,6 @@ class Student extends Component {
                     console.log('Error is:-', err);
                 })
         }
-     
-      
-      
     }
 
     selectTuitor = (id) => {
@@ -151,7 +137,7 @@ class Student extends Component {
 
     clicktoFavouriteorUnfavourite = (email) => {
         //const token = localStorage.getItem('tokenstudent');
-        const token = this.props.tokenstudent
+        const token= this.props.tokenstudent
         const config = {
             headers: {
                 Authorization: "Bearer " + token
@@ -180,11 +166,11 @@ class Student extends Component {
             })
     }
 
-    suggestionSelected = (suggestion) => {
+    suggestionSelected=(suggestion)=>{
         console.log('Suggestion selected is:-', suggestion);
         this.setState({
-            text: suggestion,
-            Subjects: []
+            text:suggestion,
+            Subjects:[]
         })
     }
 
@@ -195,11 +181,11 @@ class Student extends Component {
     // }
 
     render() {
-    //    console.log('[Students] render:-', this.state)
+        console.log('[Students] render:-', this.state)
         let tuitors;
         let subjects = this.state.Subjects;
-        const { text } = this.state
-
+        const {text} = this.state
+      
         tuitors = this.state.result.map((doc, index) => {
             return (
 
@@ -216,42 +202,39 @@ class Student extends Component {
             <div>
                 <div class="col-sm-3">
                     <h2></h2>
-                    <div className={classes.AutoCompleteText}>
                     <InputGroup style={{ margin: 10 }}>
                         <InputGroup.Prepend>
                             <InputGroup.Text id="inputGroup-sizing-sm">State:</InputGroup.Text>
                         </InputGroup.Prepend>
-                        <FormControl aria-label="State" aria-describedby="inputGroup-sizing-sm"
-                            type="text" value={this.state.statetext} onChange={(event) => this.inputChangeHandler(event, 'State')} />
+                        <FormControl  aria-label="State" aria-describedby="inputGroup-sizing-sm"
+                            type="text"  onChange={(event) => this.inputChangeHandler(event, 'State')} />
                     </InputGroup>
-                    <ItemDisplay data={this.state.StateArray} click={this.suggestionSelected} />
-                    </div>
                     <InputGroup style={{ margin: 10 }}>
                         <InputGroup.Prepend>
                             <InputGroup.Text id="inputGroup-sizing-sm">City:</InputGroup.Text>
                         </InputGroup.Prepend>
-                        <FormControl aria-label="City" aria-describedby="inputGroup-sizing-sm"
-                            type="text" onChange={(event) => this.inputChangeHandler(event, 'City')} />
+                        <FormControl  aria-label="City" aria-describedby="inputGroup-sizing-sm"
+                            type="text"  onChange={(event) => this.inputChangeHandler(event, 'City')} />
                     </InputGroup>
-                    <div className={classes.AutoCompleteText}>
+                    <div className= {classes.AutoCompleteText}>
                         <InputGroup style={{ margin: 10 }}>
                             <InputGroup.Prepend>
                                 <InputGroup.Text id="inputGroup-sizing-sm">Subject:</InputGroup.Text>
                             </InputGroup.Prepend>
-                            <FormControl aria-label="City" aria-describedby="inputGroup-sizing-sm"
-                                type="text" value={text} onChange={(event) => this.inputChangeHandler(event, 'Subject')}>
-                            </FormControl>
+                            <FormControl  aria-label="City" aria-describedby="inputGroup-sizing-sm"
+                                type="text" value={text} onChange={(event) => this.inputChangeHandler(event, 'Subject')}> 
+                                </FormControl>
                         </InputGroup>
-                        <ItemDisplay data={subjects} click={this.suggestionSelected} />
+                       <ItemDisplay data={subjects} click={this.suggestionSelected}  />
                     </div>
                     <InputGroup style={{ margin: 10 }}>
                         <InputGroup.Prepend>
                             <InputGroup.Text id="inputGroup-sizing-sm">Place:</InputGroup.Text>
                         </InputGroup.Prepend>
-                        <FormControl aria-label="City" aria-describedby="inputGroup-sizing-sm"
-                            type="text" onChange={(event) => this.inputChangeHandler(event, 'Place')} />
+                        <FormControl  aria-label="City" aria-describedby="inputGroup-sizing-sm"
+                            type="text"  onChange={(event) => this.inputChangeHandler(event, 'Place')} />
                     </InputGroup>
-                    <Button name="Search" click={this.searchTuitor}>Search</Button>
+                    <Button name="Search"  click={this.searchTuitor}>Search</Button>
                 </div>
                 {tuitors}
                 {this.state.serverMessage}

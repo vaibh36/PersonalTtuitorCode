@@ -7,6 +7,7 @@ var mongoose = require('mongoose');
 var db = 'mongodb://localhost/vaibhav';
 var tuitorinfo = require('./models/tuitor.model');
 var studentinfo = require('./models/student.model');
+let subjectinfo = require('./models/subject.model');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const redis = require('redis');
@@ -221,17 +222,14 @@ app.get('/api/fetchtuitor', verifiyToken, async (req, res) => {
             console.log('Data sending', data);
             console.log('Subject sending', data.Subject);
             console.log('Places sending', data.Places);
-
             res.status(201).json({
                 message: 'Data found',
                 Subject: data.Subject,
                 Places: data.Places,
-                FCount: data.FavouriteCount
+                FCount: data.FavouriteCount,
+                StudentList: data.Students,
             });
-
         }
-
-
     }).catch(error => {
         res.status(401).json({
             error: error
@@ -244,8 +242,10 @@ app.get('/api/fetchtuitor', verifiyToken, async (req, res) => {
 app.post('/api/places/addplaces', verifiyToken, (req, res) => {
 
     console.log('Trying to add places', req.body.places);
-
+ //   let placesarray = req.body.places.split(" ");
+ //   console.log("placesarray is:-",placesarray)
     const newPlaces = req.body.places;
+
     tuitorinfo.findOneAndUpdate({ Email: req.Email },
         { $push: { Places: newPlaces } },
 
@@ -582,6 +582,44 @@ app.post('/api/studentlogin', (req, res, next) => {
         })
 })
 
+
+app.get('/alltutors', (req,res)=>{
+    tuitorinfo.find({}, function(err, docs) {
+        if (!err){ 
+            console.log('All tutors are:-',docs);
+            res.status(201).json({
+                message: docs
+            })
+        } else {throw err;}
+    });
+})
+
+app.get('/api/subject/:sub',verifiyToken, (req,res)=>{
+    console.log(req.params.sub)
+    var regex = new RegExp(req.params.sub, 'i');
+
+   let result=[]
+   let subjectfilter =  subjectinfo.find({Subject :regex} ,{'Subject':1});
+   subjectfilter.exec((err,data)=>{
+        if(!err){
+             console.log('All subjects are:-',data);
+            
+             data.forEach((sub)=>{
+                 let obj = {
+                     subject: sub.Subject
+                 };
+                 result.push(obj)
+             })
+
+
+            res.status(201).json({
+                message: result
+            })
+        }else{throw err}
+
+   })
+})
+
 app.post('/favouriteme', verifiyToken, (req, res) => {
     console.log('Trying to favourite or unfavourite the tuitor:-', req.body.tuitoremail);
     console.log('Students email is:-', req.Email);
@@ -615,13 +653,15 @@ app.post('/favouriteme', verifiyToken, (req, res) => {
                         console.log('Document is:-', doc)
                     }
                 }).then((data) => {
-                    console.log('Final data is', data);
+                    console.log('Final data of he student from above is:-', data);
+                   
                     let FavouriteCountgenerated;
                     tuitorinfo.findOne({ Email: req.body.tuitoremail }, (err, doc) => {
-                        console.log('Favourite count to be increacsed for tuitor with data:-', doc)
+                        console.log('Favourite count to be decreased for tuitor with data:-', doc)
                         FavouriteCountgenerated = doc.FavouriteCount - 1;
-
-                        tuitorinfo.findOneAndUpdate({ Email: req.body.tuitoremail }, { $set: { FavouriteCount: FavouriteCountgenerated } }, (err, doc) => {
+                        const studentarray = doc.Students;
+                        studentarray.remove(req.Email);
+                        tuitorinfo.findOneAndUpdate({ Email: req.body.tuitoremail }, { $set: {FavouriteCount:FavouriteCountgenerated,Students:studentarray} }, (err, doc) => {
                             console.log('Trying to update the FavouriteCount of the tuitor now ')
                             if (err) {
                                 return res.status(201).json({
@@ -655,7 +695,7 @@ app.post('/favouriteme', verifiyToken, (req, res) => {
 
                 var tuitoremail = req.body.tuitoremail;
                 console.log('Basic fields are:-', req.Email, tuitoremail)
-                studentinfo.findOneAndUpdate({ Email: req.Email }, { $addToSet: { tuitors: tuitoremail } }, (err, doc) => {
+                studentinfo.findOneAndUpdate({ Email: req.Email }, {$addToSet: { tuitors: tuitoremail }}, (err, doc) => {
                     console.log('Trying to update the tuitor part of student ')
                     if (err) {
                         return res.status(201).json({
@@ -674,8 +714,7 @@ app.post('/favouriteme', verifiyToken, (req, res) => {
                         FavouriteCountgenerated = doc.FavouriteCount + 1;
                         console.log('Value of Favourite count now has become :-', FavouriteCountgenerated);
 
-
-                        tuitorinfo.findOneAndUpdate({ Email: req.body.tuitoremail }, { $set: { FavouriteCount: FavouriteCountgenerated } }, (err, doc) => {
+                        tuitorinfo.findOneAndUpdate({ Email: req.body.tuitoremail },{$set:{FavouriteCount: FavouriteCountgenerated}, $addToSet: { Students: data.Email }} , (err, doc) => {
                             console.log('Trying to update the FavouriteCount of the tuitor now ')
                             if (err) {
                                 return res.status(201).json({
@@ -684,7 +723,13 @@ app.post('/favouriteme', verifiyToken, (req, res) => {
                                 })
                             }
                             else {
-                                console.log('Document is:-', doc)
+                                console.log('Document is:-', doc);
+                                const studentdata = new studentinfo({
+                                    Email: req.Email
+                                });
+                                tuitorinfo.findOne({ Email: req.body.tuitoremail }, (err,doc)=>{
+                                    doc.Students.push(studentdata)
+                                })
                             }
                         }).then((data) => {
                             console.log('Final data is', data);

@@ -1,14 +1,13 @@
 import React, { Component } from 'react';
-import Input from '../input';
+import Input from '../HtmlComponents/Input';
 import axios from 'axios';
 import Spinner from '../Spinner/Spinner';
 import Personal from '../Personal/Personal';
 import { Link, Switch, Route, withRouter } from 'react-router-dom';
-import { Button } from 'react-bootstrap';
-import { InputGroup, FormControl } from 'react-bootstrap';
-import Header from '../Container/Header/Header';
 import TextComponent from '../Components/TextComponent';
-import Radium from 'radium'
+import Radium from 'radium';
+import Button from '../HtmlComponents/Button';
+import AuthContext from '../../src/context/auth-context';
 
 class Login1 extends Component{
 
@@ -31,26 +30,62 @@ class Login1 extends Component{
                 valid: false
             }
         },
-        errorMessage:''
+        errorMessage:'',
+        loading:false,
     }
+
+    static contextType = AuthContext;
 
     componentDidMount(prevProps){
         console.log('Component did mount of Login1 is called:-', this.props);
-      
+    }
+
+    login = (a, b) => {
+        this.setState({
+            loading: true
+        })
+        const formData = { Email: a, Password: b };
+        axios.post('/api/login', formData)
+            .then((response) => {
+                localStorage.setItem('token', response.data.token)
+                this.props.history.push('/personal');
+                this.setState({
+                    token: response.data.token, loading: false
+                })  
+
+            }).catch((err) => {
+                console.log('Error is:-', err.response.data.message);
+                this.setState({
+                    errorMessage: err.response.data.message,
+                    loading: false
+                }, () => {
+                    console.log('Tuitor login state in catch is:-', this.state.errorMessage)
+                })
+            })
+    } 
+
+    shouldComponentUpdate(nextProps, nextState){
+        console.log('[Login] shouldcomponentupdate:-', this.props.errorMessage, nextProps.errorMessage);
+        if(this.props.errorMessage!== nextProps.errorMessage)
+            return true;
+        else
+            return false;
+        
     }
 
     componentDidUpdate(prevProps,prevState){
-        console.log('Component did update of Login1 is called');
-        console.log('prevProps message is:-', prevProps.message);
-        console.log('This.props message is:-', this.props.message);
-        console.log('This.state.errormessage is:-', this.state.errorMessage)
-        if(prevProps.message !== this.props.message){
+        // console.log('Component did update of Login1 is called');
+        // console.log('prevProps message is:-', prevProps.message);
+        // console.log('This.props message is:-', this.props.message);
+        // console.log('This.state.errormessage is:-', this.state.errorMessage)
+        console.log('[Login] componentDidUpdate')
+        if(prevProps.errorMessage !== this.props.errorMessage){
             this.setState({
-                errorMessage: this.props.message
+                errorMessage: this.props.errorMessage
             })
         }
         else{
-            console.log('we are in else')
+         //   console.log('we are in else')
         }
     }
 
@@ -69,31 +104,25 @@ class Login1 extends Component{
         })
     }
 
+
     render(){
-        console.log('Inside render of login1');
-        
+     //   console.log('[Login] render')
+        let loadSpinner;
+        if(this.state.loading){
+            loadSpinner= <Spinner />
+        }
+
         return(
-            <div>
+            <React.Fragment>
+                {loadSpinner}
                  <div class="col-sm-3">
-                    <InputGroup style={{ margin: 10 }}>
-                        <InputGroup.Prepend>
-                            <InputGroup.Text id="inputGroup-sizing-sm">Email:</InputGroup.Text>
-                        </InputGroup.Prepend>
-                        <FormControl placeholder="Username" aria-label="Username" aria-describedby="inputGroup-sizing-sm"
-                            type="email" value={this.props.email} onChange={(event) => this.onChangeHandler(event, 'Email')} ref="email" />
-                    </InputGroup>
-                    <InputGroup style={{ margin: 10 }}>
-                        <InputGroup.Prepend>
-                            <InputGroup.Text id="inputGroup-sizing-sm">Password:</InputGroup.Text>
-                        </InputGroup.Prepend>
-                        <FormControl type="password" placeholder="Password" aria-label="Password" aria-describedby="inputGroup-sizing-sm"
-                            type="password" value={this.props.password} onChange={(event) => this.onChangeHandler(event, 'Password')} ref="password" />
-                    </InputGroup>
+                <Input name="Email" type="email" changeHandler={(event)=> this.onChangeHandler(event,'Email')} styleClass={{margin:'10px'}} />
+                <Input name="Password" type="password" changeHandler={(event)=> this.onChangeHandler(event,'Password')} styleClass={{margin:'10px'}} />
                 </div>
                 <Link to='/forgotpassword' style={{margin:'20px'}}><small>Forgot Password</small></Link>
-                <Button style={{ margin: 30 }} onClick={()=>this.props.clickLogin(this.state.loginForm.Email.value,this.state.loginForm.Password.value)} variant="primary">Login</Button>
-                <TextComponent>{this.state.errorMessage}</TextComponent>
-            </div>
+                <Button name="Login" styleClass={{margin:'30px'}} click={()=>this.context.loginTutor(this.state.loginForm.Email.value,this.state.loginForm.Password.value)}       />
+                <TextComponent>{this.props.errorMessage}</TextComponent>
+            </React.Fragment>
         )
     }
 };

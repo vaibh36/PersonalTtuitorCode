@@ -6,15 +6,24 @@ import Homepage from './Container/Homepage';
 import { BrowserRouter, Route } from 'react-router-dom';
 import Header from '../src/Container/Header/Header';
 
-
-
 function App() {
+
+  let token= false;
+  token= (localStorage.getItem('token') || localStorage.getItem('tokenstudent'))?true:false;
+
+  if(localStorage.getItem('token') || localStorage.getItem('tokenstudent')){
+    token=true
+  }else{
+    token=false
+  }
+
+
+  console.log('Token value at start is:-', token)
   return (
     <div>
       <BrowserRouter>
-        <Route to='/homepage' component={Homepage}></Route>
+        <Homepage />
       </BrowserRouter>
-
     </div>
   );
 }

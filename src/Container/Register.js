@@ -332,8 +332,6 @@ class Register extends Component {
                             minLengthObject={formElement.config.validation}
                             value={formElement.config.value}
                         ></Input>
-
-
                     )
 
                 })}

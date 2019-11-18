@@ -5,8 +5,7 @@ import classes from './Homepage.css';
 import Login from './Login';
 import Personal from '../Personal/Personal';
 import Logout from '../Container/Logout';
-import Header from '../Container/Header/Header';
-import AuthContext from '../auth-context';
+//import Header from '../Container/Header/Header';
 import Findtuitor from '../../src/Container/Findtuitor';
 import { withRouter } from 'react-router';
 import axios from 'axios';
@@ -22,6 +21,9 @@ import StudentLogout from '../Container/Students/StudentLogout';
 import LoadSpinner from '../Components/LoadSpinner';
 import Login1 from './Login1';
 import Radium, { StyleRoot } from 'radium';
+import Header1 from '../../src/Header1/Header1';
+import Header from '../Container/Header/Header';
+import AuthContext from '../../src/context/auth-context';
 
 class Homepage extends Component {
 
@@ -50,11 +52,12 @@ class Homepage extends Component {
                 valid: false
             }
         },
+        tutorLogged: false,
         loading: false,
         formIsValid: false,
         studentsection: false,
         errorMessage: '',
-        tokenstudent: null,
+        tokenstudent: '',
         StudentloginForm: {
             Email: {
                 value: ''
@@ -77,7 +80,7 @@ class Homepage extends Component {
             this.setState({
                 token: token,
                 val: true,
-                tokenstudent: tokenstudent
+                tokenstudent: tokenstudent,
             })
         }
         else {
@@ -97,20 +100,16 @@ class Homepage extends Component {
     }
 
     login = (a, b) => {
-
+        console.log('Inside login of homepage:-', a, b);
         this.setState({
             loading: true
         })
-        console.log('Inside ogin of homepage:-', a, b);
-
+        console.log('Inside login of homepage second statement:-', a, b);
         const formData = { Email: a, Password: b };
-        /* for (let forElementIdentifier in this.state.loginForm) {
-             formData[forElementIdentifier] = this.state.loginForm[forElementIdentifier].value
-         } */
+
         axios.post('/api/login', formData)
             .then((response) => {
                 localStorage.setItem('token', response.data.token)
-                this.props.history.push('/personal');
                 this.setState({
                     token: response.data.token, loading: false
                 })
@@ -124,7 +123,6 @@ class Homepage extends Component {
                     console.log('Tuitor login state in catch is:-', this.state.errorMessage)
                 })
             })
-
     }
 
     checkValidity = (value, rules) => {
@@ -133,15 +131,12 @@ class Homepage extends Component {
         if (rules.required) {
             isValid = value.trim() !== '' && isValid
         }
-
         if (rules.minLength) {
             isValid = value.length >= rules.minLength && isValid
         }
-
         if (rules.maxLength) {
             isValid = value.length <= rules.maxLength && isValid
         }
-
         return isValid;
 
 
@@ -182,12 +177,7 @@ class Homepage extends Component {
 
     }
 
-    studentPage = () => {
-        this.setState({
-            studentsection: true
-        })
-    }
-
+  
     onChangeHandlerStudentHandler = (event, identifier) => {
 
         const updatedForm = {
@@ -207,17 +197,12 @@ class Homepage extends Component {
     logout = () => {
 
         console.log('Insisde the tuitor logout')
-        const updatedLoginForm = {
-            ...this.state.loginForm
-        }
-
-
-        updatedLoginForm['Password'].value = ''
-        updatedLoginForm['Email'].value = ''
-
+        localStorage.removeItem('token');
+        localStorage.removeItem('tokenstudent')
+        this.props.history.push('/')
         this.setState({
-            token: '',
-            loginForm: updatedLoginForm
+            token:'',
+            tokenstudent:''
         })
 
     }
@@ -268,11 +253,6 @@ class Homepage extends Component {
 
             }).catch((err) => {
                 console.log('Error is:-', err.response.data.message);
-                /*           this.setState({
-                               errorMessage: err.response.data.message,
-                               studentLoading:false
-           
-                           }) */
                 this.setState((state) => ({
                     errorMessage: err.response.data.message,
                     studentLoading: false
@@ -291,97 +271,82 @@ class Homepage extends Component {
             StudentloginForm: updatedStudentForm,
             errorMessage: ''
         })
+    }
 
+    studentLogger = (a, b) => {
+        console.log('Student trying to login:-', this.state.loginForm);
+        const formData = { Email: a, Password: b };
+     
+        axios.post('/api/studentlogin', formData)
+            .then((response) => {
+
+                localStorage.setItem('tokenstudent', response.data.token)
+                this.props.history.push('/students');
+                this.setState({
+                    tokenstudent: response.data.token,
+                }
+            )
+        
+            }).catch((err) => {
+                console.log('Error is:-', err.response.data.message);
+                this.setState({
+                    errorMessage: err.response.data.message,
+
+                })
+            })
 
     }
 
+    shouldComponentUpdate(nextProps, nextState) {
+        console.log('[Homepage] shouldcomponentupdate:-', this.props, nextProps, this.state.errorMessage, nextState.errorMessage);
+        if (this.state.loading !== nextState.loading || this.state.token !== nextState.token || this.props.location.pathname!== nextProps.location.pathname || this.state.tokenstudent!== nextState.tokenstudent || this.state.errorMessage!== nextState.errorMessage)
+            return true
+        else
+            return false
+    }
 
-
-    deleteStudentToken = () => {
-        localStorage.removeItem('tokenstudent');
-
-        this.setState({
-            tokenstudent: null
+    componentDidUpdate(prevState){
+        console.log('[Homepage] componentDidUpdate');
+        if(this.state.errorMessage=== prevState.errorMessage){
+            this.setState({
+                errorMessage:''
+            })
         }
-        )
-        console.log('statement executed');
     }
-
-
 
     render() {
-
-        console.log('Token deleted and the message is:-', this.state)
+        console.log('[Homepage] render:-', this.state)
         let links;
-        if (this.state.token) {
+        if (localStorage.getItem('token') && this.props.location.pathname !== '/personal') {
             links = (
                 <div>
                     <Link to='/logout' onClick={this.logout}>Logout</Link>
+                    <Personal />
                 </div>
             )
         }
-        else {
-            links = (
-                <div>
-                    <Link style={{ marginLeft: '10px' }} to='/login'>Login</Link>
-                    <Link style={{ marginLeft: '10px' }} to='/register'>Register</Link>
-                    <div class="dropdown" style={{ marginLeft: 1300 }}>
-                        <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">Student Corner
-    <span class="caret"></span></button>
-                        <ul class="dropdown-menu" >
-                            <li><Link to='/students/register' >Register</Link></li>
-                            <li><Link to='/students/studentlogin'>Login</Link></li>
-                        </ul>
-                    </div>
-                </div>
-            )
-        }
-
 
         let loader;
-
         if (this.state.loading || this.state.studentLoading) {
             loader = <Spinner />
         }
 
         return (
             <div>
-                <div style={{lineHeight:'20%'}}>
-                <Link to='/'><h3  style={{marginLeft:'10px' ,marginBottom:'0px',  paddingBottom: '0px'}}>Find my tuitor</h3></Link>
-                <span style={{fontSize:'10px', marginLeft:'80px', fontFamily:'Times New Roman", Times, serif;'}}>Discover.Learn.Grow</span>
-                </div>
-                <br />
-                {links}
-                <div>
-                </div>
+            <AuthContext.Provider value={{
+                loginTutor : this.login,
+                loginStudent: this.studentLogger
+            }}>
                 {loader}
-                <Switch>
-                    {this.state.tokenstudent ? null : <Route path='/register' exact component={Register}></Route>}
-                    {this.state.tokenstudent ? null : <Route path='/login' render={(props) => (<Login1 {...props}
-                        message={this.state.errorMessage}
-                        clickLogin={this.login}
-                    ></Login1>)} />}
-
-                    <Route path='/personal' component={Personal}></Route>
-                    <Route path='/findtuitor' component={Findtuitor}></Route>
-                    {this.state.tokenstudent ? <Route path='/students' exact component={() => <Student clickme={this.studentLogOut} />}></Route> : null}
-
-                    {this.state.tokenstudent ? null : <Route exact path='/students/register' component={RegisterStudent}></Route>}
-                    {this.state.tokenstudent ? null : <Route exact path='/students/studentlogin' render={(props) => (<StudentLogin
-                        message={this.state.errorMessage}
-                        email={this.state.StudentloginForm.Email.value}
-                        password={this.state.StudentloginForm.Password.value}
-                        emailVal={this.onChangeHandlerStudentHandler}
-                        passwordVal={this.onChangeHandlerStudentHandler}
-                        clickStudentLogin={this.loginStudent}
-                    ></StudentLogin>)}></Route>}
-                    {this.state.tokenstudent ? null : <Route exact path='/tuitorsearch' component={TuitorSearch}></Route>}
-                    <Route path='/logout' exact component={() => <Logout />}></Route>
-                    <Route path='/students/:id1/:id2/:id3/:id4/:id5/:id6' exact component={Tuitordata}></Route>
-                    <Route path='/forgotpassword' component={ForgotPassword}></Route>
-                    <Route path='/reset/:id' component={NewPassword}></Route>
-                    <Redirect from='/' to='/students'></Redirect>
-                </Switch>
+                {!(this.state.token || this.state.tokenstudent) ? <Header1 /> : null}
+                <br />
+                <Header
+                 token={this.state.token}
+                 tokenstudent={this.state.tokenstudent}
+                 logout={this.logout}
+                 errorMessage={this.state.errorMessage}
+                 />
+                 </AuthContext.Provider>
             </div>
         )
     }
