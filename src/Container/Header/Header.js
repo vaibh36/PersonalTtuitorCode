@@ -13,7 +13,6 @@ import RegisterStudent from '../../Container/Students/Register';
 import StudentLogin from '../../Container/Students/StudentLogin';
 import Personal from '../../Personal/Personal';
 import Button from '../../HtmlComponents/Button';
-import classes from './Header.css';
 
 class Header extends Component {
 
